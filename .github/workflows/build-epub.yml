@@ -1,4 +1,4 @@
-name: Build EPUB
+name: Build eBook
 
 on:
   push:
@@ -14,8 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pandoc
-        run: sudo apt-get install -y pandoc
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended lmodern
 
       - name: Create metadata
         run: |
@@ -24,6 +26,8 @@ jobs:
           title: "AWS Service and Theme Index"
           author: "AWS Reference"
           lang: en
+          geometry: margin=2.5cm
+          fontsize: 11pt
           ---
           EOF
 
@@ -42,8 +46,29 @@ jobs:
             05-themes.md \
             06-questions.md
 
-      - name: Upload artifact
+      - name: Build PDF
+        run: |
+          pandoc \
+            --toc \
+            --toc-depth=2 \
+            --pdf-engine=pdflatex \
+            -o aws-reference.pdf \
+            title.txt \
+            01-messaging.md \
+            02-compute-storage.md \
+            03-ai-ml.md \
+            04-supporting.md \
+            05-themes.md \
+            06-questions.md
+
+      - name: Upload EPUB
         uses: actions/upload-artifact@v4
         with:
           name: aws-reference-epub
           path: aws-reference.epub
+
+      - name: Upload PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-reference-pdf
+          path: aws-reference.pdf
