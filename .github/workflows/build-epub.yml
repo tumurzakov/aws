@@ -8,6 +8,9 @@ on:
       - ".github/workflows/build-epub.yml"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -72,3 +75,17 @@ jobs:
         with:
           name: aws-reference-pdf
           path: aws-reference.pdf
+
+      - name: Generate release tag
+        id: tag
+        run: echo "tag=v$(date +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.tag.outputs.tag }}" \
+            --title "AWS Reference ${{ steps.tag.outputs.tag }}" \
+            --notes "Auto-built EPUB and PDF from latest markdown sources." \
+            aws-reference.epub \
+            aws-reference.pdf
