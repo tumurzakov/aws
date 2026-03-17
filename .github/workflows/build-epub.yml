@@ -1,0 +1,49 @@
+name: Build EPUB
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "*.md"
+      - ".github/workflows/build-epub.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pandoc
+        run: sudo apt-get install -y pandoc
+
+      - name: Create metadata
+        run: |
+          cat > title.txt << 'EOF'
+          ---
+          title: "AWS Service and Theme Index"
+          author: "AWS Reference"
+          lang: en
+          ---
+          EOF
+
+      - name: Build EPUB
+        run: |
+          pandoc \
+            --toc \
+            --toc-depth=2 \
+            --epub-title-page=true \
+            -o aws-reference.epub \
+            title.txt \
+            01-messaging.md \
+            02-compute-storage.md \
+            03-ai-ml.md \
+            04-supporting.md \
+            05-themes.md \
+            06-questions.md
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-reference-epub
+          path: aws-reference.epub
